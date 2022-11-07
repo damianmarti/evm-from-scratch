@@ -628,7 +628,7 @@ export default function evm(code: Uint8Array, tx: Object, state: Object, block: 
     if (opcode == 0x56) {
       console.log("JUMP");
       const counter = stack.shift();
-      pc = counter;
+      pc = Number(counter);
     }
 
     // JUMPI
@@ -637,7 +637,7 @@ export default function evm(code: Uint8Array, tx: Object, state: Object, block: 
       const counter = stack.shift();
       const condition = stack.shift();
       if (condition != BigInt(0)) {
-        pc = counter;
+        pc = Number(counter);
       }
     }
 
@@ -659,141 +659,46 @@ export default function evm(code: Uint8Array, tx: Object, state: Object, block: 
       stack.unshift(MAX_2_256 - BigInt(1));
     }
 
-    // TODO: refactor PUSHs
-
-    // PUSH1
-    if (opcode == 0x60) {
-      const value = code[pc];
-      pc++;
-      console.log("PROCESING PUSH1 with value: ", value);
-      stack.unshift(BigInt(value));
-    }
-
-    // PUSH2
-    if (opcode == 0x61) {
-      const value = code.slice(pc, pc+2);
-      pc += 2;
-      console.log("PROCESING PUSH2 with value: ", value);
+    // PUSHN (0x60 to 0x7F)
+    if (opcode >= 96 && opcode <= 127) {
+      const n = opcode - 95;
+      const value = code.slice(pc, pc+n);
+      pc += n;
+      console.log("PROCESING PUSH", n, " with value: ", value);
       const valueBigInt = bigintConversion.bufToBigint(value);
-      console.log("PROCESING PUSH2 with valueBigInt: ", valueBigInt);
       stack.unshift(valueBigInt);
     }
 
-    // PUSH3
-    if (opcode == 0x62) {
-      const value = code.slice(pc, pc+3);
-      pc += 3;
-      console.log("PROCESING PUSH3 with value: ", value);
-      const valueBigInt = bigintConversion.bufToBigint(value);
-      console.log("PROCESING PUSH3 with valueBigInt: ", valueBigInt);
-      stack.unshift(valueBigInt);
-    }
-
-    // PUSH4
-    if (opcode == 0x63) {
-      const value = code.slice(pc, pc+4);
-      pc += 4;
-      console.log("PROCESING PUSH4 with value: ", value);
-      const valueBigInt = bigintConversion.bufToBigint(value);
-      console.log("PROCESING PUSH4 with valueBigInt: ", valueBigInt);
-      stack.unshift(valueBigInt);
-    }
-
-    // PUSH13
-    if (opcode == 0x6C) {
-      const value = code.slice(pc, pc+13);
-      pc += 13;
-      console.log("PROCESING PUSH13 with value: ", value);
-      const valueBigInt = bigintConversion.bufToBigint(value);
-      console.log("PROCESING PUSH13 with valueBigInt: ", valueBigInt);
-      stack.unshift(valueBigInt);
-    }
-
-    // PUSH20
-    if (opcode == 0x73) {
-      const value = code.slice(pc, pc+20);
-      pc += 20;
-      console.log("PROCESING PUSH20 with value: ", value);
-      const valueBigInt = bigintConversion.bufToBigint(value);
-      console.log("PROCESING PUSH20 with valueBigInt: ", valueBigInt);
-      stack.unshift(valueBigInt);
-    }
-
-    // PUSH31
-    if (opcode == 0x7E) {
-      const value = code.slice(pc, pc+31);
-      pc += 31;
-      console.log("PROCESING PUSH31 with value: ", value);
-      const valueBigInt = bigintConversion.bufToBigint(value);
-      console.log("PROCESING PUSH31 with valueBigInt: ", valueBigInt);
-      stack.unshift(valueBigInt);
-    }
-
-    // PUSH32
-    if (opcode == 0x7F) {
-      const value = code.slice(pc, pc+32);
-      pc += 32;
-      console.log("PROCESING PUSH32 with value: ", value);
-      const valueBigInt = bigintConversion.bufToBigint(value);
-      console.log("PROCESING PUSH32 with valueBigInt: ", valueBigInt);
-      stack.unshift(valueBigInt);
-    }
-
-    // TODO: refactor DUPs
-
-    // DUP1
-    if (opcode == 0x80) {
-      console.log("DUP1");
-      const value = stack[0];
+    // DUPN (0x80 to 0x8F)
+    if (opcode >= 128 && opcode <= 143) {
+      const n = opcode - 128;
+      console.log("DUP", n);
+      const value = stack[n];
       stack.unshift(value);
     }
 
-    // DUP2
-    if (opcode == 0x81) {
-      console.log("DUP2");
-      const value = stack[1];
-      stack.unshift(value);
-    }
-
-    // DUP3
-    if (opcode == 0x82) {
-      console.log("DUP3");
-      const value = stack[2];
-      stack.unshift(value);
-    }
-
-    // SWAP1
-    if (opcode == 0x90) {
-      console.log("SWAP1");
+    // SWAPN (0x90 to 0x9F)
+    if (opcode >= 144 && opcode <= 159) {
+      const n = opcode - 143;
+      console.log("SWAP", n);
       const value1 = stack[0];
-      const value2 = stack[1];
+      const value2 = stack[n];
       stack[0] = value2;
-      stack[1] = value1;
+      stack[n] = value1;
     }
 
-    // SWAP2
-    if (opcode == 0x91) {
-      console.log("SWAP2");
-      const value1 = stack[0];
-      const value2 = stack[2];
-      stack[0] = value2;
-      stack[2] = value1;
-    }
-
-    // SWAP3
-    if (opcode == 0x92) {
-      console.log("SWAP3");
-      const value1 = stack[0];
-      const value2 = stack[3];
-      stack[0] = value2;
-      stack[3] = value1;
-    }
-
-    // LOG0
-    if (opcode == 0xA0) {
-      console.log("LOG0");
+    // LOGN (0xA0 to 0xA4)
+    if (opcode >= 160 && opcode <= 164) {
+      const n = opcode - 160;
+      console.log("LOG", n);
       const offset = stack.shift();
       const size = stack.shift();
+
+      const topics = [];
+      for (let j=0; j<n; j++) {
+        topics.push(stack.shift());
+      }
+
       const addressHex = tx.to;
 
       console.log("memory: ", memory);
@@ -812,137 +717,7 @@ export default function evm(code: Uint8Array, tx: Object, state: Object, block: 
       logs.push({
         address: addressHex,
         data: bigintConversion.bufToHex(valueArray),
-        topics: []
-      })
-    }
-
-    // LOG1
-    if (opcode == 0xA1) {
-      console.log("LOG1");
-      const offset = stack.shift();
-      const size = stack.shift();
-      const topic = stack.shift();
-      const addressHex = tx.to;
-
-      console.log("memory: ", memory);
-
-      const dataArray = memory;
-      const valueArray = new Uint8Array(Number(size));
-
-      const dataSlice = dataArray.slice(Number(offset), Number(offset) + Number(size));
-
-      for (let j = 0; j<dataSlice.length; j++) {
-        valueArray[j] = dataSlice[j];
-      }
-
-      console.log("valueArray: ", valueArray);
-
-      logs.push({
-        address: addressHex,
-        data: bigintConversion.bufToHex(valueArray),
-        topics: ["0x" + bigintConversion.bigintToHex(topic)]
-      })
-    }
-
-    // LOG2
-    if (opcode == 0xA2) {
-      console.log("LOG2");
-      const offset = stack.shift();
-      const size = stack.shift();
-      const topic1 = stack.shift();
-      const topic2 = stack.shift();
-      const addressHex = tx.to;
-
-      console.log("memory: ", memory);
-
-      const dataArray = memory;
-      const valueArray = new Uint8Array(Number(size));
-
-      const dataSlice = dataArray.slice(Number(offset), Number(offset) + Number(size));
-
-      for (let j = 0; j<dataSlice.length; j++) {
-        valueArray[j] = dataSlice[j];
-      }
-
-      console.log("valueArray: ", valueArray);
-
-      logs.push({
-        address: addressHex,
-        data: bigintConversion.bufToHex(valueArray),
-        topics: [
-          "0x" + bigintConversion.bigintToHex(topic1),
-          "0x" + bigintConversion.bigintToHex(topic2),
-        ]
-      })
-    }
-
-    // LOG3
-    if (opcode == 0xA3) {
-      console.log("LOG3");
-      const offset = stack.shift();
-      const size = stack.shift();
-      const topic1 = stack.shift();
-      const topic2 = stack.shift();
-      const topic3 = stack.shift();
-      const addressHex = tx.to;
-
-      console.log("memory: ", memory);
-
-      const dataArray = memory;
-      const valueArray = new Uint8Array(Number(size));
-
-      const dataSlice = dataArray.slice(Number(offset), Number(offset) + Number(size));
-
-      for (let j = 0; j<dataSlice.length; j++) {
-        valueArray[j] = dataSlice[j];
-      }
-
-      console.log("valueArray: ", valueArray);
-
-      logs.push({
-        address: addressHex,
-        data: bigintConversion.bufToHex(valueArray),
-        topics: [
-          "0x" + bigintConversion.bigintToHex(topic1),
-          "0x" + bigintConversion.bigintToHex(topic2),
-          "0x" + bigintConversion.bigintToHex(topic3),
-        ]
-      })
-    }
-
-    // LOG4
-    if (opcode == 0xA4) {
-      console.log("LOG4");
-      const offset = stack.shift();
-      const size = stack.shift();
-      const topic1 = stack.shift();
-      const topic2 = stack.shift();
-      const topic3 = stack.shift();
-      const topic4 = stack.shift();
-      const addressHex = tx.to;
-
-      console.log("memory: ", memory);
-
-      const dataArray = memory;
-      const valueArray = new Uint8Array(Number(size));
-
-      const dataSlice = dataArray.slice(Number(offset), Number(offset) + Number(size));
-
-      for (let j = 0; j<dataSlice.length; j++) {
-        valueArray[j] = dataSlice[j];
-      }
-
-      console.log("valueArray: ", valueArray);
-
-      logs.push({
-        address: addressHex,
-        data: bigintConversion.bufToHex(valueArray),
-        topics: [
-          "0x" + bigintConversion.bigintToHex(topic1),
-          "0x" + bigintConversion.bigintToHex(topic2),
-          "0x" + bigintConversion.bigintToHex(topic3),
-          "0x" + bigintConversion.bigintToHex(topic4),
-        ]
+        topics: topics.map(topic => "0x" + bigintConversion.bigintToHex(topic))
       })
     }
 
@@ -1004,26 +779,6 @@ export default function evm(code: Uint8Array, tx: Object, state: Object, block: 
       } else {
         stack.unshift(bigintConversion.hexToBigint(address.split('x')[1]))
       }
-
-
-
-      /*
-      let subResultSuccess = BigInt(0);
-      if (subResult.success) {
-        subResultSuccess = BigInt(1);
-      }
-
-      stack.unshift(subResultSuccess);
-
-      subResultReturn = bigintConversion.hexToBuf(subResult.return);
-      console.log("subResultReturn: ", subResultReturn);
-
-      for (let j=0; j<subResultReturn.length; j++) {
-        memory[retOffset+BigInt(j)] = subResultReturn[j];
-      }
-
-      console.log("memory: ", memory);
-      */
     }
 
     // CALL
@@ -1239,48 +994,6 @@ export default function evm(code: Uint8Array, tx: Object, state: Object, block: 
     }
 
   }
-
-/*
-  while (!next.done) {
-    let opcode = next.value;
-
-    // STOP
-    if (opcode == 0) {
-      console.log("STOP");
-      return { stack: stack };
-    }
-
-    // ADD
-    if (opcode == 1) {
-      console.log("ADD");
-      const value = stack.shift() + stack.shift();
-      stack.unshift(value);
-    }
-
-    // POP
-    if (opcode == 80) {
-      console.log("PROCESING POP");
-      stack.shift();
-    }
-
-    // PUSH1
-    if (opcode == 96) {
-      const value = codeIterator.next().value;
-      console.log("PROCESING PUSH1 with value: ", value);
-      stack.unshift(BigInt(value));
-    }
-
-    // PUSH32
-    if (opcode == 127) {
-      const value = codeIterator.next().value;
-      console.log("PROCESING PUSH1 with value: ", value);
-      stack.unshift(BigInt(value));
-    }
-
-    next = codeIterator.next();
-  }
-*/
-
 
   return { stack: stack, logs: logs, success: success, return: returnData };
 }
